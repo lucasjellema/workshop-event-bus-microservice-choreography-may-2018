@@ -90,7 +90,7 @@ function initializeKafkaConsumer(attempt) {
   consumerGroup.on('message', onMessage);
   
   consumerGroup.on('connect', function () {
-      console.log('connected to ' + topicName + " at " + consumerOptions.host);
+      console.log('connected to ' + kafkaTopic + " at " + consumerOptions.host);
   })
   
 /*
