@@ -93,43 +93,10 @@ function initializeKafkaConsumer(attempt) {
       console.log('connected to ' + kafkaTopic + " at " + consumerOptions.host);
   })
   
-/*
-  try {
-    console.log("Try to initialize Kafka Client and Consumer, attempt " + attempt+" at "+kafkaHost + ":"+zookeeperPort );
-    var client = new kafka.Client(kafkaHost + ":"+zookeeperPort+"/")
-    console.log("created client for " + kafkaHost);
-    consumer = new Consumer(
-      client,
-      [],
-      { fromOffset: true }
-    );
-    console.log("Kafka Client and Consumer initialized " + consumer);
-    // register the handler for any messages received by the consumer on any topic it is listening to. 
-    consumer.on('message', function (message) {
-      console.log("event received "+message);
-      handleEventBusMessage(message);
-    });
-    consumer.on('error', function (err) {
-      console.log("error in creation of Kafka consumer " + JSON.stringify(err));
-      console.log("Try again in 5 seconds");
-      setTimeout(initializeKafkaConsumer, 5000, attempt + 1);
-    });
-    consumer.addTopics([
-      { topic: kafkaTopic, partition: 0, offset: 0 }
-    ], () => console.log("topic added: " + kafkaTopic));
-    console.log("Kafka Consumer - added message handler and added topic "+kafkaTopic);
-  }
-  catch (err) {
-    console.log("Exception in initializeKafkaConsumer" + e);
-    console.log("Exception in initializeKafkaConsumer" + JSON.stringify(e));
-    console.log("Try again in 5 seconds");
-    setTimeout(initializeKafkaConsumer, 5000, attempt + 1);
-  }
-  */
+
 }//initializeKafkaConsumer
 
 initializeKafkaConsumer(1);
-//initializeKafkaProducer(1);
 
 function handleEventBusMessage(eventMessage) {
   try {

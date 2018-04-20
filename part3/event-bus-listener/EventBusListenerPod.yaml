@@ -13,7 +13,7 @@ spec:
     imagePullPolicy: IfNotPresent
     env:
     - name: GIT_URL
-      value: "https://github.com/lucasjellema/microservices-choreography-kubernetes-workshop-june2017"
+      value: "https://github.com/lucasjellema/workshop-event-bus-microservice-choreography-may-2018"
     - name: APP_PORT
       value: "8096"
     - name: APP_HOME
