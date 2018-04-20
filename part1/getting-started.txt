@@ -1,0 +1,142 @@
+Objective
+
+Run Node.js application that is on GitHub
+Use generic Docker image - started with a few input parameters: github url (repository to clone into the container), port (set environment variable that application can read), app_home (which directory to navigate into) , app_startup (which script to run)
+
+Starting point: https://hub.docker.com/r/jakubknejzlik/docker-git-node-app/
+
+
+Steps:
+
+create github repo: https://github.com/lucasjellema/microservices-choreography-kubernetes-workshop-june2017
+
+create node app: Part1/requestCounter.js (plus package.json)
+
+create Dockerfile (plus docker-work subdirectory with bootstrap.sh script to copy into container)
+ 
+in boot2docker terminal:
+docker build -t lucasjellema/node-app-runner .
+
+
+push image to Docker Hub Registry:
+docker login
+
+docker push lucasjellema/node-app-runner
+	
+	
+docker run -e "GIT_URL=https://github.com/lucasjellema/microservices-choreography-kubernetes-workshop-june2017" -e "APP_PORT=8080" -p 8001:8080 -e "APP_HOME=part1"  -e "APP_STARTUP=requestCounter.js"   lucasjellema/node-app-runner
+
+
+
+-- to find the ip address of the docker quickstart/boot2docker VM:
+docker-machine ip default
+
+192.168.99.100
+
+access application at: <Docker Machine IP>:<Host port mapped to>, in this case:
+192.168.99.100:8001
+
+run image and start shell to inspect for example contents of file system
+docker run  -it --entrypoint /bin/bash  lucasjellema/node-app-runner
+
+
+Note: starting the container for the first time takes up to 40 seconds (if a new Node version is requested) for downloading/installing the latest Node version and cloning the Git Repo
+
+stop container:
+
+docker stop <container id>
+list all containers:
+
+docker container ls -all
+
+later on restart it (now the time to restart is subsecond):
+
+docker start <container id>
+
+At this point we can turn the container into an image:
+
+docker commit CONTAINER_ID request-counter
+
+and later on run a container based on this image:
+
+docker run  -e "APP_PORT=8080" -p 8004:8080 -e "APP_HOME=part1" -e "JUST_RUN=Y" -e "APP_STARTUP=requestCounter.js"   request-counter
+
+Created new application (requestCounter-2.js in same GIT HUB Repo):
+
+docker run -e "GIT_URL=https://github.com/lucasjellema/microservices-choreography-kubernetes-workshop-june2017" -e "APP_PORT=8080" -p 8005:8080 -e "APP_HOME=part1"  -e "APP_STARTUP=requestCounter-2.js"   lucasjellema/node-app-runner
+
+
+docker run -e "GIT_URL=https://github.com/lucasjellema/nodejs-serversentevents-quickstart"  -p 8010:8888 -e"PORT=8888" -e "APP_HOME=."  -e "APP_STARTUP=app.js"   lucasjellema/node-app-runner
+
+
+
+
+Note: remove old containers
+
+list exited containers:
+docker ps -aq -f status=exited.
+
+remove them (http://blog.yohanliyanage.com/2015/05/docker-clean-up-after-yourself/)
+docker rm -v $(docker ps -a -q -f status=exited)
+
+remove dangling images
+
+list them:
+docker images -f "dangling=true" -q
+
+docker rmi $(docker images -f "dangling=true" -q)
+
+Issues:
+no such file or directory (for bootstrap.sh)
+line endings were Windows style
+fixed through changed setting in Visual Studio Code: http://stackoverflow.com/questions/39525417/visual-studio-code-how-to-show-line-endings
+
+To debug container events (https://serverfault.com/questions/596994/how-can-i-debug-a-docker-container-initialization) :
+docker events& 
+
+docker logs <container id>
+
+
+====================
+
+Run Docker Container with Redis inside:
+
+docker run -d --name redis -p 6379:6379 redis
+
+get node.js module for redis access
+
+npm install redis --save
+
+
+Node.js and redis - counters, optimistic locking and more:
+https://blog.yld.io/2016/11/07/node-js-databases-using-redis-for-fun-and-profit/#.WSGEWtwlGpo
+
+
+docker run -e "GIT_URL=https://github.com/lucasjellema/microservices-choreography-kubernetes-workshop-june2017" -e "APP_PORT=8080" -p 8015:8080 -e "APP_HOME=part1"  -e "APP_STARTUP=requestCounter-3.js" -e "REDIS_HOST:127.0.0.1" -e "REDIS_PORT:6379"   lucasjellema/node-app-runner
+
+
+
+# run minikube
+minikube.exe start
+# open dashboard
+minikube dashboard
+
+minikube status 
+
+cd .\ValidateTweet
+kubectl create -f pod.yaml
+
+cd ..\TweetEnricher
+kubectl create -f pod.yaml
+
+cd ..\WorkflowLauncher
+kubectl create -f pod.yaml
+
+cd ..\TweetBoard
+create -f pod.yaml
+
+kubectl.exe expose pod tweet-enricher-ms --type=NodePort
+kubectl.exe expose pod tweet-validator-ms --type=NodePort
+kubectl.exe expose pod tweet-board-ms --type=NodePort
+
+minikube.exe stop

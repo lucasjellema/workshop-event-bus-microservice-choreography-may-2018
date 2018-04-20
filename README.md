@@ -1,2 +1,2 @@
-# workshop-event-bus-microservice-choreography-may-2018
-Resources for Workshop on Microservices Choreography with Apache Kafka, Kubernetes, Node JS, Redis 
+# microservices-choreography-kubernetes-workshop-june2017
+Workshop materials for a June 2017 workshop on microservices, Docker &amp; Kubernetes, Node.JS, Kafka, Redis and choreography
