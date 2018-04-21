@@ -23,7 +23,7 @@ spec:
     - name: KAFKA_HOST
       value: "zookeeper.kafka"
     - name: ZOOKEEPER_PORT
-      value: "zookeeper.kafka"
+      value: "2181"
     - name: KAFKA_TOPIC
       value: "workflowEvents"
     - name: REDIS_HOST
