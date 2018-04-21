@@ -4,6 +4,7 @@ var http = require('http'),
   bodyParser = require('body-parser'),
   eventBusPublisher = require("./EventPublisher.js");
 var localCacheAPI = require("./local-cache-api.js");
+var localLoggerAPI = require("./local-logger-api.js");
 
 
 var PORT = process.env.APP_PORT || 8095;
