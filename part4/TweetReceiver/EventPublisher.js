@@ -7,7 +7,7 @@ KeyedMessage = kafka.KeyedMessage;
 
 var client;
 
-var APP_VERSION = "0.8.4"
+var APP_VERSION = "0.8.5"
 var APP_NAME = "EventBusPublisher"
 
 

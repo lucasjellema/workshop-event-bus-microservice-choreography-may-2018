@@ -3,9 +3,11 @@ var http = require('http'),
   express = require('express'),
   bodyParser = require('body-parser'),
   eventBusPublisher = require("./EventPublisher.js");
+var localCacheAPI = require("./local-cache-api.js");
+
 
 var PORT = process.env.APP_PORT || 8095;
-var APP_VERSION = "0.1.2"
+var APP_VERSION = "0.1.3"
 var APP_NAME = "TweetReceiver"
 var workflowEventsTopic = process.env.KAFKA_TOPIC ||"workflowEvents";
 
@@ -78,5 +80,8 @@ function postNewTweet(req, res, tweet) {
     , "module": "soaring.clouds." + moduleName
     , "timestamp": Date.now()
   }, workflowEventsTopic);
+  localLoggerAPI.log("Tweet was received and published to topic "+workflowEventsTopic +": "+JSON.stringify(tweet)
+  , APP_NAME, "info");
+
   res.json({"result":"Tweet was received and published to topic "+workflowEventsTopic}).end();
 }// postNewTweet
