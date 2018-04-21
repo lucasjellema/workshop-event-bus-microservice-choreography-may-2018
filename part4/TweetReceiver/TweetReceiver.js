@@ -3,12 +3,11 @@ var http = require('http'),
   express = require('express'),
   bodyParser = require('body-parser'),
   eventBusPublisher = require("./EventPublisher.js");
-var localCacheAPI = require("./local-cache-api.js");
 var localLoggerAPI = require("./local-logger-api.js");
 
 
 var PORT = process.env.APP_PORT || 8095;
-var APP_VERSION = "0.1.4"
+var APP_VERSION = "0.1.5"
 var APP_NAME = "TweetReceiver"
 var workflowEventsTopic = process.env.KAFKA_TOPIC ||"workflowEvents";
 

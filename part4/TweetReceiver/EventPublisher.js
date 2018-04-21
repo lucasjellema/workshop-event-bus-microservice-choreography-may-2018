@@ -1,4 +1,4 @@
-  var kafka = require('kafka-node');
+var kafka = require('kafka-node');
 
 var kafkaHost = process.env.KAFKA_HOST || "ubuntu";
 var zookeeperPort = process.env.ZOOKEEPER_PORT || 2181;
