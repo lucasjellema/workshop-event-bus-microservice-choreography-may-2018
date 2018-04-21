@@ -21,7 +21,7 @@ spec:
     - name: APP_STARTUP
       value: "TweetEnricher.js"
     - name: KAFKA_HOST
-      value: "ubuntu"
+      value: "zookeeper.kafka"
     - name: ZOOKEEPER_PORT
       value: "zookeeper.kafka"
     - name: KAFKA_TOPIC
