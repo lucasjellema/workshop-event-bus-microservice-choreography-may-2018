@@ -61,28 +61,28 @@ function validateTweet(tweet) {
   outcome.result = "OK";
   outcome.motivation = "perfectly ok tweet according to our current set of rules";
   var valid = true;
-  var reason="Not OK because:";
+  var reason = "Not OK because:";
   console.log("validate tweet " + JSON.stringify(tweet));
   // if tweet is retweet, then no good
   if (tweet.text.startsWith("RT")) {
-     valid = false;
-     reason= reason + "Retweets are not accepted. ";
+    valid = false;
+    reason = reason + "Retweets are not accepted. ";
   }
   if (tweet.author == "johndoe" || tweet.author == "john.doe") {
-     valid = false;
-     reason= reason + "No fake authors (John Doe is not acceptable). ";
+    valid = false;
+    reason = reason + "No fake authors (John Doe is not acceptable). ";
   }
-  if (tweet.text.indexOf("Trump ") > -1 ||tweet.text.toLowerCase().indexOf("brexit")>-1||tweet.text.toLowerCase().indexOf("elections")>-1) {
-     valid = false;
-     reason= reason + "No Political Statements are condoned today. ";
+  if (tweet.text.indexOf("Trump ") > -1 || tweet.text.toLowerCase().indexOf("brexit") > -1 || tweet.text.toLowerCase().indexOf("elections") > -1) {
+    valid = false;
+    reason = reason + "No Political Statements are condoned today. ";
   }
-  if (tweet.text.indexOf("cloud ") > -1)  {
-     valid = false;
-     reason= reason + "Let's stay with two feet on the ground today - so no references to cloud. ";
+  if (tweet.text.indexOf("cloud ") > -1) {
+    valid = false;
+    reason = reason + "Let's stay with two feet on the ground today - so no references to cloud. ";
   }
   if (!valid) {
     outcome.result = "NOK";
-    outcome.motivation = reason;    
+    outcome.motivation = reason;
   }
   return outcome;
 }
@@ -107,7 +107,8 @@ function handleWorkflowEvent(eventMessage) {
       // find action of type ValidateTweet
       if ("ValidateTweet" == action.type) {
         // check conditions
-        if ("new" == action.status) {
+        if ("new" == action.status
+          && conditionsSatisfied(action, event.actions)) {
           var workflowDocument;
           localCacheAPI.getFromCache(event.workflowConversationIdentifier, function (document) {
             console.log("Workflow document retrieved from cache");
@@ -138,7 +139,7 @@ function handleWorkflowEvent(eventMessage) {
       event.updateTimeStamp = new Date().getTime();
       event.lastUpdater = APP_NAME;
       // publish event
-      eventBusPublisher.publishEvent('OracleCodeTwitterWorkflow' + event.updateTimeStamp,event, workflowEventsTopic);
+      eventBusPublisher.publishEvent('OracleCodeTwitterWorkflow' + event.updateTimeStamp, event, workflowEventsTopic);
 
       // PUT Workflow Document back  in Cache under workflow event identifier
       localCacheAPI.putInCache(event.workflowConversationIdentifier, event,
@@ -148,3 +149,30 @@ function handleWorkflowEvent(eventMessage) {
     }// acted
   }// if actions
 }// handleWorkflowEvent
+
+function conditionsSatisfied(action, actions) {
+  var satisfied = true;
+  // verify if conditions in action are methodName(params) {
+  //   example action: {
+  //   "id": "CaptureToTweetBoard"
+  // , "type": "TweetBoardCapture"
+  // , "status": "new"  // new, inprogress, complete, failed
+  // , "result": "" // for example OK, 0, 42, true
+  // , "conditions": [{ "action": "EnrichTweetWithDetails", "status": "complete", "result": "OK" }]
+  for (i = 0; i < action.conditions.length; i++) {
+    var condition = action.conditions[i];
+    if (!actionWithIdHasStatusAndResult(actions, condition.action, condition.status, condition.result)) {
+      satisfied = false;
+      break;
+    }
+  }//for
+  return satisfied;
+}//conditionsSatisfied
+
+function actionWithIdHasStatusAndResult(actions, id, status, result) {
+  for (i = 0; i < actions.length; i++) {
+    if (actions[i].id == id && actions[i].status == status && actions[i].result == result)
+      return true;
+  }//for
+  return false;
+}//actionWithIdHasStatusAndResult
