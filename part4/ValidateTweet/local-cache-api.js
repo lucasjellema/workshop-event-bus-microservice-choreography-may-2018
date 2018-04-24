@@ -32,14 +32,13 @@ localCacheAPI.getFromCache = function (key, callback) {
 }//getFromCache
 
 localCacheAPI.putInCache = function (key, value, callback) {
+    console.log(`Go put in cache under key ${key} the value ${JSON.stringify(value)} `)
     try {
             console.log("putInCache Callback = " + callback);
             redisClient.set(key, JSON.stringify(value));
-            callback("Put in cache");
-            done(function () {
-                console.log(`Lock ${lockName} has been released, and is available for others to use`);
-            });
+            callback("Was put in cache");
     } catch (e) {
+        console.log("Failed to put in cache " + JSON.stringify(e))
         callback("Failed to put in cache " + JSON.stringify(e));
     }
 }//putInCache
