@@ -66,6 +66,21 @@ function enrich(tweet) {
 // configure Kafka interaction
 eventBusConsumer.registerEventHandler(workflowEventsTopic, handleWorkflowEvent);
 
+function containsAction(event) {
+  if (event.actions) {
+    var acted = false;
+    var workflowDocument;
+    for (i = 0; i < event.actions.length; i++) {
+      var action = event.actions[i];
+      // find action of type ValidateTweet
+      if (TweetEnricherActionType == action.type) {
+        // check conditions
+        if ("new" == action.status) return true
+      }
+    }//for
+  }
+  return false;
+}
 
 function handleWorkflowEvent(eventMessage) {
   var event = JSON.parse(eventMessage.value);
@@ -75,53 +90,51 @@ function handleWorkflowEvent(eventMessage) {
   // event we expect is of type workflowEvents
   // we should do something with this event if it contains an action (actions[].type='EnrichTweet' where status ="new" and conditions are satisfied)
 
-  if (event.actions) {
-    var acted = false;
-    for (i = 0; i < event.actions.length; i++) {
-      var action = event.actions[i];
-      // find action of type EnrichTweet
-      if (TweetEnricherActionType == action.type) {
-        // check conditions
-        if ("new" == action.status
-          && conditionsSatisfied(action, event.actions)) {
-          var workflowDocument;
-          localCacheAPI.getFromCache(event.workflowConversationIdentifier, function (document) {
-            console.log("Workflow document retrieved from cache");
-            var workflowDocument = document;
-            // this happens  asynchronously; right now we do not actually use the retrieved document. It does work.       
+  if (containsAction(event))
+    localCacheAPI.getFromCache(event.workflowConversationIdentifier, function (document) {
+      console.log("Workflow document retrieved from cache");
+      workflowDocument = document;
+      var acted = false;
+      for (i = 0; i < workflowDocument.actions.length; i++) {
+        var action = workflowDocument.actions[i];
+        // find action of type EnrichTweet
+        if (TweetEnricherActionType == action.type) {
+          // check conditions
+          if ("new" == action.status
+            && conditionsSatisfied(action, workflowDocument.actions)) {
+            // if satisfied, then validate tweet
+            var enrichedTweet = enrich(workflowDocument.payload);
+            workflowDocument.payload = enrichedTweet;
+            // update action in event
+            action.status = 'complete';
+            action.result = 'OK';
+            // add audit line
+            workflowDocument.audit.push(
+              { "when": new Date().getTime(), "who": "TweetEnricher", "what": "update", "comment": "Tweet Enrichment Performed" }
+            );
+
+            acted = true;
+          }
+        }// if EnrichTweet
+        // if any action performed, then republish workflow event and store routingslip in cache
+      }//for
+      if (acted) {
+        workflowDocument.updateTimeStamp = new Date().getTime();
+        workflowDocument.lastUpdater = APP_NAME;
+        // publish event
+        eventBusPublisher.publishEvent('OracleCodeTwitterWorkflow' + workflowDocument.updateTimeStamp, workflowDocument, workflowEventsTopic);
+
+        localLoggerAPI.log("Enriched Tweet  - (workflowConversationIdentifier:" + event.workflowConversationIdentifier + ")"
+          , APP_NAME, "info");
+
+        // PUT Workflow Document back  in Cache under workflow event identifier
+        localCacheAPI.putInCache(event.workflowConversationIdentifier, workflowDocument,
+          function (result) {
+            console.log("store workflowevent plus routing slip in cache under key " + event.workflowConversationIdentifier + ": " + JSON.stringify(result));
           });
-          // if satisfied, then validate tweet
-          var enrichedTweet = enrich(event.payload);
-          event.payload = enrichedTweet;
-          // update action in event
-          action.status = 'complete';
-          action.result = 'OK';
-          // add audit line
-          event.audit.push(
-            { "when": new Date().getTime(), "who": "TweetEnricher", "what": "update", "comment": "Tweet Enrichment Performed" }
-          );
-
-          acted = true;
-        }
-      }// if EnrichTweet
-      // if any action performed, then republish workflow event and store routingslip in cache
-    }//for
-    if (acted) {
-      event.updateTimeStamp = new Date().getTime();
-      event.lastUpdater = APP_NAME;
-      // publish event
-      eventBusPublisher.publishEvent('OracleCodeTwitterWorkflow' + event.updateTimeStamp,event, workflowEventsTopic);
-
-      localLoggerAPI.log("Enriched Tweet  - (workflowConversationIdentifier:" + event.workflowConversationIdentifier + ")"
-        , APP_NAME, "info");
-
-      // PUT Workflow Document back  in Cache under workflow event identifier
-      localCacheAPI.putInCache(event.workflowConversationIdentifier, event,
-        function (result) {
-          console.log("store workflowevent plus routing slip in cache under key " + event.workflowConversationIdentifier + ": " + JSON.stringify(result));
-        });
-    }// acted
-  }// if actions
+      }// acted
+    })
+  // if contains actions
 }// handleWorkflowEvent
 
 function conditionsSatisfied(action, actions) {
