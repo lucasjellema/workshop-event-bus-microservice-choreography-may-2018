@@ -17,7 +17,7 @@ spec:
     - name: APP_PORT
       value: "8118"
     - name: APP_HOME
-      value: "TweetTranslator"
+      value: "part4/TweetTranslator"
     - name: APP_STARTUP
       value: "TweetTranslator.js"
     - name: KAFKA_HOST
