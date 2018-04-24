@@ -6,14 +6,14 @@ var request = require('request')
 
 var localCacheAPI = module.exports;
 var moduleName = "accs.localCacheAPI";
-var moduleVersion = "0.8.7";
+var moduleVersion = "0.9.2";
 var Redis = require("redis");
-
+//var RedisLock = require("redis-lock");
 var redisHost = process.env.REDIS_HOST || "192.168.99.100";
 var redisPort = process.env.REDIS_PORT || 32657;
 
 var redisClient = Redis.createClient({ "host": redisHost, "port": redisPort });
-
+//var redisLock = RedisLock(redisClient);
 localCacheAPI.getFromCache = function (key, callback) {
     try {
         console.log("get document from cache api with key " + key);
@@ -32,14 +32,16 @@ localCacheAPI.getFromCache = function (key, callback) {
 }//getFromCache
 
 localCacheAPI.putInCache = function (key, value, callback) {
+    console.log(`Go put in cache under key ${key} the value ${JSON.stringify(value)} `)
     try {
-        console.log("putInCache Callback = " + callback);
-        redisClient.set(key, JSON.stringify(value));
-        callback("Put in cache");
+            console.log("putInCache Callback ");
+            redisClient.set(key, JSON.stringify(value));
+            callback("Was put in cache");
     } catch (e) {
+        console.log("Failed to put in cache " + JSON.stringify(e))
         callback("Failed to put in cache " + JSON.stringify(e));
     }
 }//putInCache
 
 
-console.log("Local Cache API (version " + moduleVersion + ") initialized running against Redis instance at "+redisHost+":"+redisPort);
+console.log("Local Cache API (version " + moduleVersion + ") initialized running against Redis instance at " + redisHost + ":" + redisPort);

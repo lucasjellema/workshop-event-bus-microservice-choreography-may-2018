@@ -9,7 +9,7 @@ var eventBusConsumer = require("./EventConsumer.js");
 
 var workflowEventsTopic = "workflowEvents";
 var PORT = process.env.APP_PORT || 8096;
-var APP_VERSION = "0.8"
+var APP_VERSION = "0.8.2"
 var APP_NAME = "TweetBoard"
 
 var TweetBoardCaptureActionType = "TweetBoardCapture";
@@ -59,6 +59,21 @@ app.get('/tweetBoard', function (req, res) {
 
 // configure Kafka interaction
 eventBusConsumer.registerEventHandler(workflowEventsTopic, handleWorkflowEvent);
+function containsAction(event) {
+  if (event.actions) {
+    var acted = false;
+    var workflowDocument;
+    for (i = 0; i < event.actions.length; i++) {
+      var action = event.actions[i];
+      // find action of type ValidateTweet
+      if (TweetBoardCaptureActionType == action.type) {
+        // check conditions
+        if ("new" == action.status) return true
+      }
+    }//for
+  }
+  return false;
+}
 
 
 function handleWorkflowEvent(eventMessage) {
@@ -70,70 +85,73 @@ function handleWorkflowEvent(eventMessage) {
   // event we expect is of type workflowEvents
   // we should do something with this event if it contains an action (actions[].type='ValidateTweet' where status ="new" and conditions are satisfied)
 
-  if (event.actions) {
-    var acted = false;
-    localCacheAPI.getFromCache(tweetBoardDocumentKey, function (doc) {
-      console.log("tweetboard document retrieved from cache");
-      // what if document does not yet exist? initialize it!
-      if (!doc || doc==null) {
-        doc = {"tweets":[]};
-      }
-      for (i = 0; i < event.actions.length; i++) {
-        var action = event.actions[i];
-        // find action of type ValidateTweet
-        if (TweetBoardCaptureActionType == action.type) {
-          // check conditions
-          if ("new" == action.status
-            && conditionsSatisfied(action, event.actions)) {
-            var workflowDocument;
-            // add workflow tweet payload to the tweetboard document
-            // reverse messages to have last/most recent one first
-            doc.tweets.reverse();
-            doc.tweets.push(event.payload);
-            // most recent ones at the top
-            doc.tweets.reverse();
-            // retain no more than 25 entries
-            doc.tweets = doc.tweets.slice(0, 25);
-
-            localLoggerAPI.log("Added Tweet to TweetBoard - (workflowConversationIdentifier:" + event.workflowConversationIdentifier + ")"
-              , APP_NAME, "info");
-            // update action in event
-            action.status = 'complete';
-            // add audit line
-            event.audit.push(
-              { "when": new Date().getTime(), "who": "TweetBoard", "what": "update", "comment": "Tweet Board Capture done" }
-            );
-            acted = true;
-          }
-        }// if TweetBoardCaptureActionType
-        else {
-          // localLoggerAPI.log("Conditions not (yet) met for action " + action.id + " - (workflowConversationIdentifier:" + event.workflowConversationIdentifier + ")"
-          //   , APP_NAME, "debug");
-
+  if (containsAction(event))
+    localCacheAPI.getFromCache(event.workflowConversationIdentifier, function (document) {
+      console.log("Workflow document retrieved from cache");
+      var workflowDocument = document;
+      var acted = false;
+      localCacheAPI.getFromCache(tweetBoardDocumentKey, function (doc) {
+        console.log("tweetboard document retrieved from cache");
+        // what if document does not yet exist? initialize it!
+        if (!doc || doc == null) {
+          doc = { "tweets": [] };
         }
-        // if any action performed, then republish workflow event and store routingslip in cache
-      }//for
-      if (acted) {
-        // PUT Workflow Document back  in Cache under workflow event identifier
-        localCacheAPI.putInCache(event.workflowConversationIdentifier, event,
-          function (result) {
-            console.log("store workflowevent plus routing slip in cache under key " + event.workflowConversationIdentifier + ": " + JSON.stringify(result));
-          });
+        for (i = 0; i < workflowDocument.actions.length; i++) {
+          var action = workflowDocument.actions[i];
+          // find action of type ValidateTweet
+          if (TweetBoardCaptureActionType == action.type) {
+            // check conditions
+            if ("new" == action.status
+              && conditionsSatisfied(action, workflowDocument.actions)) {
+              // add workflow tweet payload to the tweetboard document
+              // reverse messages to have last/most recent one first
+              doc.tweets.reverse();
+              doc.tweets.push(event.payload);
+              // most recent ones at the top
+              doc.tweets.reverse();
+              // retain no more than 25 entries
+              doc.tweets = doc.tweets.slice(0, 25);
 
-        event.updateTimeStamp = new Date().getTime();
-        event.lastUpdater = APP_NAME;
-      // publish event
-      eventBusPublisher.publishEvent('OracleCodeTwitterWorkflow' + event.updateTimeStamp,event, workflowEventsTopic);
+              localLoggerAPI.log("Added Tweet to TweetBoard - (workflowConversationIdentifier:" + event.workflowConversationIdentifier + ")"
+                , APP_NAME, "info");
+              // update action in event
+              action.status = 'complete';
+              // add audit line
+              workflowDocument.audit.push(
+                { "when": new Date().getTime(), "who": "TweetBoard", "what": "update", "comment": "Tweet Board Capture done" }
+              );
+              acted = true;
+            }
+          }// if TweetBoardCaptureActionType
+          else {
+            // localLoggerAPI.log("Conditions not (yet) met for action " + action.id + " - (workflowConversationIdentifier:" + event.workflowConversationIdentifier + ")"
+            //   , APP_NAME, "debug");
 
-        // put tweetboard document in the cache
-        localCacheAPI.putInCache(tweetBoardDocumentKey, doc,
-          function (result) {
-            console.log("stored tweetboard document cache under key " + tweetBoardDocumentKey + ": " + JSON.stringify(result));
-          });
+          }
+          // if any action performed, then republish workflow event and store routingslip in cache
+        }//for
+        if (acted) {
+          workflowDocument.updateTimeStamp = new Date().getTime();
+          workflowDocument.lastUpdater = APP_NAME;
+          // publish event
+          eventBusPublisher.publishEvent('OracleCodeTwitterWorkflow' + workflowDocument.updateTimeStamp, workflowDocument, workflowEventsTopic);
 
-      }// acted
-    });//getFromCache
-  }// if actions
+          localLoggerAPI.log("Put Tweet on TweetBoard  - (workflowConversationIdentifier:" + event.workflowConversationIdentifier + ")"
+            , APP_NAME, "info");
+          // PUT Workflow Document back  in Cache under workflow event identifier
+          localCacheAPI.putInCache(event.workflowConversationIdentifier, workflowDocument,
+            function (result) {
+              console.log("store workflowevent plus routing slip in cache under key " + event.workflowConversationIdentifier + ": " + JSON.stringify(result));
+            });
+
+          // put tweetboard document in the cache
+          localCacheAPI.putInCache(tweetBoardDocumentKey, doc,
+            function (result) {
+              console.log("stored tweetboard document cache under key " + tweetBoardDocumentKey + ": " + JSON.stringify(result));
+            });
+        }// acted
+      })
+    })  
 }// handleWorkflowEvent
 
 function conditionsSatisfied(action, actions) {

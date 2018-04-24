@@ -93,7 +93,7 @@ function handleWorkflowEvent(eventMessage) {
   if (containsAction(event))
     localCacheAPI.getFromCache(event.workflowConversationIdentifier, function (document) {
       console.log("Workflow document retrieved from cache");
-      workflowDocument = document;
+      var workflowDocument = document;
       var acted = false;
       for (i = 0; i < workflowDocument.actions.length; i++) {
         var action = workflowDocument.actions[i];
