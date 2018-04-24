@@ -6,7 +6,7 @@ var request = require('request')
 
 var localCacheAPI = module.exports;
 var moduleName = "accs.localCacheAPI";
-var moduleVersion = "0.9.1";
+var moduleVersion = "0.9.2";
 var Redis = require("redis");
 //var RedisLock = require("redis-lock");
 var redisHost = process.env.REDIS_HOST || "192.168.99.100";
@@ -34,7 +34,7 @@ localCacheAPI.getFromCache = function (key, callback) {
 localCacheAPI.putInCache = function (key, value, callback) {
     console.log(`Go put in cache under key ${key} the value ${JSON.stringify(value)} `)
     try {
-            console.log("putInCache Callback = " + callback);
+            console.log("putInCache Callback ");
             redisClient.set(key, JSON.stringify(value));
             callback("Was put in cache");
     } catch (e) {
