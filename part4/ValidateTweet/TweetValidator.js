@@ -149,14 +149,14 @@ function handleWorkflowEvent(eventMessage) {
       if (acted) {
         workflowDocument.updateTimeStamp = new Date().getTime();
         workflowDocument.lastUpdater = APP_NAME;
-        // publish event
-        eventBusPublisher.publishEvent('OracleCodeTwitterWorkflow' + workflowDocument.updateTimeStamp, workflowDocument, workflowEventsTopic);
-
         // PUT Workflow Document back  in Cache under workflow event identifier
         localCacheAPI.putInCache(event.workflowConversationIdentifier, workflowDocument,
           function (result) {
             console.log("store workflowevent plus routing slip in cache under key " + event.workflowConversationIdentifier + ": " + JSON.stringify(result));
           });
+        // publish event
+        eventBusPublisher.publishEvent('OracleCodeTwitterWorkflow' + workflowDocument.updateTimeStamp, workflowDocument, workflowEventsTopic);
+
       }// acted
     })
   // if contains actions

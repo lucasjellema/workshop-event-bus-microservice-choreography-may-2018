@@ -26,7 +26,6 @@ function handleWorkflowEvent(eventMessage) {
         console.log("A new tweet event has reached us. Time to act and publish a corresponding workflow event");
         message.payload = event.tweet;
         message.workflowConversationIdentifier = "OracleCodeTweetProcessor" + new Date().getTime();
-        eventBusPublisher.publishEvent(message.workflowConversationIdentifier, message, workflowEventsTopic);
 
         localLoggerAPI.log("Initialized new workflow OracleCodeTweetProcessor triggered by NewTweetEvent; stored workflowevent plus routing slip in cache under key " + message.workflowConversationIdentifier + " - (workflowConversationIdentifier:"
             + message.workflowConversationIdentifier + ")"
@@ -40,7 +39,8 @@ function handleWorkflowEvent(eventMessage) {
             function (result) {
                 console.log("store workflowevent plus routing slip in cache under key " + message.workflowConversationIdentifier + ": " + JSON.stringify(result));
             });
-    }//if 
+            eventBusPublisher.publishEvent(message.workflowConversationIdentifier, message, workflowEventsTopic);
+        }//if 
 
 }// handleWorkflowEvent
 

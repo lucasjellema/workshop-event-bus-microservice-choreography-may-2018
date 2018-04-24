@@ -26,13 +26,12 @@ function handleWorkflowEvent(eventMessage) {
         console.log("A new tweet event has reached us. Time to act and publish a corresponding workflow event");
         message.payload = event.tweet;
         message.workflowConversationIdentifier = "OracleCodeTweetProcessor" + new Date().getTime();
-        eventBusPublisher.publishEvent(message.workflowConversationIdentifier, message, workflowEventsTopic);
 
         localLoggerAPI.log("Initialized new workflow OracleCodeTweetProcessor triggered by NewTweetEvent; stored workflowevent plus routing slip in cache under key " + message.workflowConversationIdentifier + " - (workflowConversationIdentifier:"
             + message.workflowConversationIdentifier + ")"
             , APP_NAME, "info");
 
-        localLoggerAPI.log("Initialized new workflow  - (workflowConversationIdentifier:" + message.workflowConversationIdentifier  + ")"
+        localLoggerAPI.log("Initialized new workflow  - (workflowConversationIdentifier:" + message.workflowConversationIdentifier + ")"
             , APP_NAME, "info");
 
         // PUT Workflow Event in Cache under workflow event identifier
@@ -40,6 +39,7 @@ function handleWorkflowEvent(eventMessage) {
             function (result) {
                 console.log("store workflowevent plus routing slip in cache under key " + message.workflowConversationIdentifier + ": " + JSON.stringify(result));
             });
+        eventBusPublisher.publishEvent(message.workflowConversationIdentifier, message, workflowEventsTopic);
     }//if 
 
 }// handleWorkflowEvent
@@ -52,35 +52,35 @@ message =
         , "creationTimeStamp": new Date().getTime()
         , "creator": "WorkflowLauncher"
         , "actions":
-        [{
-            "id": "EnrichTweetWithDetails"
-            , "type": "EnrichTweet"
-            , "status": "new"  // new, inprogress, complete, failed
-            , "result": "" // for example OK, 0, 42, true
-            , "conditions": [] // a condition can be {"action":"<id of a step in the routingslip>", "status":"complete","result":"OK"}; note: the implicit condition for this step is that its own status = new   
-        }
-        , {
-            "id": "ValidateTweetAgainstFilters"
-            , "type": "ValidateTweet"
-            , "status": "new"  // new, inprogress, complete, failed
-            , "result": "" // for example OK, 0, 42, true
-            , "conditions": [{ "action": "EnrichTweetWithDetails", "status": "complete", "result": "OK" }]
-        }
-        , {
-            "id": "TranslateTweetsIntoPopularLanguages"
-            , "type": "TranslateTweet"
-            , "status": "new"  // new, inprogress, complete, failed
-            , "result": "" // for example OK, 0, 42, true
-            , "conditions": [{ "action": "ValidateTweetAgainstFilters", "status": "complete", "result": "OK" }]
-        }
-            , {
-            "id": "CaptureToTweetBoard"
-            , "type": "TweetBoardCapture"
-            , "status": "new"  // new, inprogress, complete, failed
-            , "result": "" // for example OK, 0, 42, true
-            , "conditions": [{ "action": "TranslateTweetsIntoPopularLanguages", "status": "complete", "result": "OK" }]
-        }
-        ]
+            [{
+                "id": "EnrichTweetWithDetails"
+                , "type": "EnrichTweet"
+                , "status": "new"  // new, inprogress, complete, failed
+                , "result": "" // for example OK, 0, 42, true
+                , "conditions": [] // a condition can be {"action":"<id of a step in the routingslip>", "status":"complete","result":"OK"}; note: the implicit condition for this step is that its own status = new   
+            }
+                , {
+                "id": "ValidateTweetAgainstFilters"
+                , "type": "ValidateTweet"
+                , "status": "new"  // new, inprogress, complete, failed
+                , "result": "" // for example OK, 0, 42, true
+                , "conditions": [{ "action": "EnrichTweetWithDetails", "status": "complete", "result": "OK" }]
+            }
+                , {
+                "id": "TranslateTweetsIntoPopularLanguages"
+                , "type": "TranslateTweet"
+                , "status": "new"  // new, inprogress, complete, failed
+                , "result": "" // for example OK, 0, 42, true
+                , "conditions": [{ "action": "ValidateTweetAgainstFilters", "status": "complete", "result": "OK" }]
+            }
+                , {
+                "id": "CaptureToTweetBoard"
+                , "type": "TweetBoardCapture"
+                , "status": "new"  // new, inprogress, complete, failed
+                , "result": "" // for example OK, 0, 42, true
+                , "conditions": [{ "action": "TranslateTweetsIntoPopularLanguages", "status": "complete", "result": "OK" }]
+            }
+            ]
         , "audit": [
             { "when": new Date().getTime(), "who": "WorkflowLauncher", "what": "creation", "comment": "initial creation of workflow" }
         ]

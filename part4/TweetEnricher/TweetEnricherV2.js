@@ -95,7 +95,7 @@ function handleWorkflowEvent(eventMessage) {
   if (containsAction(event))
     localCacheAPI.getFromCache(event.workflowConversationIdentifier, function (document) {
       console.log("Workflow document retrieved from cache");
-      workflowDocument = document;
+      var workflowDocument = document;
       var acted = false;
       for (i = 0; i < workflowDocument.actions.length; i++) {
         var action = workflowDocument.actions[i];
@@ -123,8 +123,6 @@ function handleWorkflowEvent(eventMessage) {
       if (acted) {
         workflowDocument.updateTimeStamp = new Date().getTime();
         workflowDocument.lastUpdater = APP_NAME;
-        // publish event
-        eventBusPublisher.publishEvent('OracleCodeTwitterWorkflow' + workflowDocument.updateTimeStamp, workflowDocument, workflowEventsTopic);
 
         localLoggerAPI.log("Enriched Tweet  - (workflowConversationIdentifier:" + event.workflowConversationIdentifier + ")"
           , APP_NAME, "info");
@@ -134,6 +132,8 @@ function handleWorkflowEvent(eventMessage) {
           function (result) {
             console.log("store workflowevent plus routing slip in cache under key " + event.workflowConversationIdentifier + ": " + JSON.stringify(result));
           });
+        // publish event
+        eventBusPublisher.publishEvent('OracleCodeTwitterWorkflow' + workflowDocument.updateTimeStamp, workflowDocument, workflowEventsTopic);
       }// acted
     })
   // if contains actions
