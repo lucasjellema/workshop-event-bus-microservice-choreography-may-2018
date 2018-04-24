@@ -5,14 +5,14 @@ var http = require('http'),
 translateGoogle = require('google-translate-api');
 ;
 
-//var localCacheAPI = require("./local-cache-api.js");
+var localCacheAPI = require("./local-cache-api.js");
 var localLoggerAPI = require("./local-logger-api.js");
 var eventBusPublisher = require("./EventPublisher.js");
 var eventBusConsumer = require("./EventConsumer.js");
 
 var workflowEventsTopic = "workflowEvents";
 var PORT = process.env.APP_PORT || 8099;
-var APP_VERSION = "0.1.3"
+var APP_VERSION = "0.1.4"
 var APP_NAME = "TweetTranslator"
 
 var TweetTranslatorActionType = "TranslateTweet";
