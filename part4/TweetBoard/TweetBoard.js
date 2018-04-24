@@ -116,6 +116,7 @@ function handleWorkflowEvent(eventMessage) {
                 , APP_NAME, "info");
               // update action in event
               action.status = 'complete';
+              action.result = 'OK';
               // add audit line
               workflowDocument.audit.push(
                 { "when": new Date().getTime(), "who": "TweetBoard", "what": "update", "comment": "Tweet Board Capture done" }
@@ -133,8 +134,6 @@ function handleWorkflowEvent(eventMessage) {
         if (acted) {
           workflowDocument.updateTimeStamp = new Date().getTime();
           workflowDocument.lastUpdater = APP_NAME;
-          // publish event
-          eventBusPublisher.publishEvent('OracleCodeTwitterWorkflow' + workflowDocument.updateTimeStamp, workflowDocument, workflowEventsTopic);
 
           localLoggerAPI.log("Put Tweet on TweetBoard  - (workflowConversationIdentifier:" + event.workflowConversationIdentifier + ")"
             , APP_NAME, "info");
@@ -149,6 +148,8 @@ function handleWorkflowEvent(eventMessage) {
             function (result) {
               console.log("stored tweetboard document cache under key " + tweetBoardDocumentKey + ": " + JSON.stringify(result));
             });
+          // publish event
+          eventBusPublisher.publishEvent('OracleCodeTwitterWorkflow' + workflowDocument.updateTimeStamp, workflowDocument, workflowEventsTopic);
         }// acted
       })
     })  
