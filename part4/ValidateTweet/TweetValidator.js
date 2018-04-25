@@ -10,7 +10,7 @@ var eventBusConsumer = require("./EventConsumer.js");
 
 var workflowEventsTopic = "workflowEvents";
 var PORT = process.env.APP_PORT || 8091;
-var APP_VERSION = "0.8"
+var APP_VERSION = "0.8.3"
 var APP_NAME = "TweetValidator"
 
 console.log("Running TweetValidator version " + APP_VERSION);
@@ -103,6 +103,9 @@ function containsAction(event) {
 }
 
 
+// based on https://hackernoon.com/lets-make-a-javascript-wait-function-fa3a2eb88f11
+var wait = ms => new Promise((r, j) => setTimeout(r, ms))
+
 function handleWorkflowEvent(eventMessage) {
   var event = JSON.parse(eventMessage.value);
   console.log("received message", eventMessage);
@@ -113,7 +116,7 @@ function handleWorkflowEvent(eventMessage) {
   // we should do something with this event if it contains an action (actions[].type='ValidateTweet' where status ="new" and conditions are satisfied)
 
   if (containsAction(event))
-    localCacheAPI.getFromCache(event.workflowConversationIdentifier, function (document) {
+    localCacheAPI.getFromCache(event.workflowConversationIdentifier, async function (document) {
       console.log("Workflow document retrieved from cache");
       workflowDocument = document;
       // this happens  asynchronously; right now we do not actually use the retrieved document. It does work.       
@@ -154,6 +157,8 @@ function handleWorkflowEvent(eventMessage) {
           function (result) {
             console.log("store workflowevent plus routing slip in cache under key " + event.workflowConversationIdentifier + ": " + JSON.stringify(result));
           });
+        // artifical waiting time, 1.5 secs
+        await wait(1500)
         // publish event
         eventBusPublisher.publishEvent('OracleCodeTwitterWorkflow' + workflowDocument.updateTimeStamp, workflowDocument, workflowEventsTopic);
 

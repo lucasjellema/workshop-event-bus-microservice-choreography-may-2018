@@ -9,7 +9,7 @@ var eventBusConsumer = require("./EventConsumer.js");
 
 var workflowEventsTopic = "workflowEvents";
 var PORT = process.env.APP_PORT || 8096;
-var APP_VERSION = "0.8.2"
+var APP_VERSION = "0.8.3"
 var APP_NAME = "TweetBoard"
 
 var TweetBoardCaptureActionType = "TweetBoardCapture";
@@ -76,6 +76,9 @@ function containsAction(event) {
 }
 
 
+// based on https://hackernoon.com/lets-make-a-javascript-wait-function-fa3a2eb88f11
+var wait = ms => new Promise((r, j) => setTimeout(r, ms))
+
 function handleWorkflowEvent(eventMessage) {
   var event = JSON.parse(eventMessage.value);
   console.log("received message", eventMessage);
@@ -86,7 +89,7 @@ function handleWorkflowEvent(eventMessage) {
   // we should do something with this event if it contains an action (actions[].type='ValidateTweet' where status ="new" and conditions are satisfied)
 
   if (containsAction(event))
-    localCacheAPI.getFromCache(event.workflowConversationIdentifier, function (document) {
+    localCacheAPI.getFromCache(event.workflowConversationIdentifier, async function (document) {
       console.log("Workflow document retrieved from cache");
       var workflowDocument = document;
       var acted = false;
@@ -148,11 +151,14 @@ function handleWorkflowEvent(eventMessage) {
             function (result) {
               console.log("stored tweetboard document cache under key " + tweetBoardDocumentKey + ": " + JSON.stringify(result));
             });
+          // artifical waiting time, 2.5 secs
+          await wait(2500)
+
           // publish event
           eventBusPublisher.publishEvent('OracleCodeTwitterWorkflow' + workflowDocument.updateTimeStamp, workflowDocument, workflowEventsTopic);
         }// acted
       })
-    })  
+    })
 }// handleWorkflowEvent
 
 function conditionsSatisfied(action, actions) {
