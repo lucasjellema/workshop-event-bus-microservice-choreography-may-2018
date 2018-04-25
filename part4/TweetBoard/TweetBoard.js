@@ -9,7 +9,7 @@ var eventBusConsumer = require("./EventConsumer.js");
 
 var workflowEventsTopic = "workflowEvents";
 var PORT = process.env.APP_PORT || 8096;
-var APP_VERSION = "0.8.3"
+var APP_VERSION = "0.8.4"
 var APP_NAME = "TweetBoard"
 
 var TweetBoardCaptureActionType = "TweetBoardCapture";
@@ -89,11 +89,11 @@ function handleWorkflowEvent(eventMessage) {
   // we should do something with this event if it contains an action (actions[].type='ValidateTweet' where status ="new" and conditions are satisfied)
 
   if (containsAction(event))
-    localCacheAPI.getFromCache(event.workflowConversationIdentifier, async function (document) {
+    localCacheAPI.getFromCache(event.workflowConversationIdentifier, function (document) {
       console.log("Workflow document retrieved from cache");
       var workflowDocument = document;
       var acted = false;
-      localCacheAPI.getFromCache(tweetBoardDocumentKey, function (doc) {
+      localCacheAPI.getFromCache(tweetBoardDocumentKey, async function (doc) {
         console.log("tweetboard document retrieved from cache");
         // what if document does not yet exist? initialize it!
         if (!doc || doc == null) {
