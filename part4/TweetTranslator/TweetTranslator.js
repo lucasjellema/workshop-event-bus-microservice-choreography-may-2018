@@ -12,7 +12,7 @@ var eventBusConsumer = require("./EventConsumer.js");
 
 var workflowEventsTopic = "workflowEvents";
 var PORT = process.env.APP_PORT || 8099;
-var APP_VERSION = "0.1.4"
+var APP_VERSION = "0.1.5"
 var APP_NAME = "TweetTranslator"
 
 var TweetTranslatorActionType = "TranslateTweet";
@@ -105,6 +105,7 @@ function containsAction(event) {
   return false;
 }
 
+var wait = ms => new Promise((r, j) => setTimeout(r, ms))
 
 function handleWorkflowEvent(eventMessage) {
   var event = JSON.parse(eventMessage.value);
@@ -128,7 +129,6 @@ function handleWorkflowEvent(eventMessage) {
               var currentAction = action;
               localLoggerAPI.log("handleWorkflowEvent : "
                 , APP_NAME, "info");
-
               translate(workflowDocument.payload).then((translatedTweet) => {
 
                 workflowDocument.payload = translatedTweet;
@@ -152,6 +152,8 @@ function handleWorkflowEvent(eventMessage) {
                     function (result) {
                       console.log("store workflowevent plus routing slip in cache under key " + event.workflowConversationIdentifier + ": " + JSON.stringify(result));
                     });
+                  // artifical waiting time, 1.5 secs
+                  await wait(1500)
                   // publish event
                   eventBusPublisher.publishEvent('OracleCodeTwitterWorkflow' + workflowDocument.updateTimeStamp, workflowDocument, workflowEventsTopic);
 
@@ -168,6 +170,7 @@ function handleWorkflowEvent(eventMessage) {
 
   }
 }// handleWorkflowEvent
+
 
 function conditionsSatisfied(action, actions) {
   var satisfied = true;
