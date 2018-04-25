@@ -105,9 +105,10 @@ function containsAction(event) {
   return false;
 }
 
+// based on https://hackernoon.com/lets-make-a-javascript-wait-function-fa3a2eb88f11
 var wait = ms => new Promise((r, j) => setTimeout(r, ms))
 
-function handleWorkflowEvent(eventMessage) {
+async function handleWorkflowEvent(eventMessage) {
   var event = JSON.parse(eventMessage.value);
   console.log("received message", eventMessage);
   console.log("actual event: " + JSON.stringify(event));
@@ -129,36 +130,35 @@ function handleWorkflowEvent(eventMessage) {
               var currentAction = action;
               localLoggerAPI.log("handleWorkflowEvent : "
                 , APP_NAME, "info");
-              translate(workflowDocument.payload).then((translatedTweet) => {
 
-                workflowDocument.payload = translatedTweet;
-                // update action in event
-                currentAction.status = 'complete';
-                currentAction.result = 'OK';
-                // add audit line
+              var translatedTweet = await translate(workflowDocument.payload);
+              workflowDocument.payload = translatedTweet;
+              // update action in event
+              currentAction.status = 'complete';
+              currentAction.result = 'OK';
+              // add audit line
 
-                workflowDocument.audit.push(
-                  { "when": new Date().getTime(), "who": "TweetTranslator", "what": "update", "comment": "Tweet Translation Performed" }
-                );
-                acted = true;
-                if (acted) {
-                  workflowDocument.updateTimeStamp = new Date().getTime();
-                  workflowDocument.lastUpdater = APP_NAME;
+              workflowDocument.audit.push(
+                { "when": new Date().getTime(), "who": "TweetTranslator", "what": "update", "comment": "Tweet Translation Performed" }
+              );
+              acted = true;
+              if (acted) {
+                workflowDocument.updateTimeStamp = new Date().getTime();
+                workflowDocument.lastUpdater = APP_NAME;
 
-                  localLoggerAPI.log("Translated Tweet  - (workflowConversationIdentifier:" + event.workflowConversationIdentifier + ")"
-                    , APP_NAME, "info");
-                  // PUT Workflow Document back  in Cache under workflow event identifier
-                  localCacheAPI.putInCache(event.workflowConversationIdentifier, workflowDocument,
-                    function (result) {
-                      console.log("store workflowevent plus routing slip in cache under key " + event.workflowConversationIdentifier + ": " + JSON.stringify(result));
-                    });
-                  // artifical waiting time, 1.5 secs
-                  await wait(1500)
-                  // publish event
-                  eventBusPublisher.publishEvent('OracleCodeTwitterWorkflow' + workflowDocument.updateTimeStamp, workflowDocument, workflowEventsTopic);
+                localLoggerAPI.log("Translated Tweet  - (workflowConversationIdentifier:" + event.workflowConversationIdentifier + ")"
+                  , APP_NAME, "info");
+                // PUT Workflow Document back  in Cache under workflow event identifier
+                localCacheAPI.putInCache(event.workflowConversationIdentifier, workflowDocument,
+                  function (result) {
+                    console.log("store workflowevent plus routing slip in cache under key " + event.workflowConversationIdentifier + ": " + JSON.stringify(result));
+                  });
+                // artifical waiting time, 1.5 secs
+                await wait(1500)
+                // publish event
+                eventBusPublisher.publishEvent('OracleCodeTwitterWorkflow' + workflowDocument.updateTimeStamp, workflowDocument, workflowEventsTopic);
 
-                }// acted
-              })// then
+              }// acted
             }
           }// if TranslateTweet type
           // if any action performed, then republish workflow event and store routingslip in cache
