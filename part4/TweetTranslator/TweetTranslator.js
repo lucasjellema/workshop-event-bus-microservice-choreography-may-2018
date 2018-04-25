@@ -12,7 +12,7 @@ var eventBusConsumer = require("./EventConsumer.js");
 
 var workflowEventsTopic = "workflowEvents";
 var PORT = process.env.APP_PORT || 8099;
-var APP_VERSION = "0.1.5"
+var APP_VERSION = "0.1.6"
 var APP_NAME = "TweetTranslator"
 
 var TweetTranslatorActionType = "TranslateTweet";
@@ -108,7 +108,7 @@ function containsAction(event) {
 // based on https://hackernoon.com/lets-make-a-javascript-wait-function-fa3a2eb88f11
 var wait = ms => new Promise((r, j) => setTimeout(r, ms))
 
-async function handleWorkflowEvent(eventMessage) {
+function handleWorkflowEvent(eventMessage) {
   var event = JSON.parse(eventMessage.value);
   console.log("received message", eventMessage);
   console.log("actual event: " + JSON.stringify(event));
@@ -116,7 +116,7 @@ async function handleWorkflowEvent(eventMessage) {
   // we should do something with this event if it contains an action (actions[].type=TweetTranslatorActionType where status ="new" and conditions are satisfied)
   try {
     if (containsAction(event))
-      localCacheAPI.getFromCache(event.workflowConversationIdentifier, function (document) {
+      localCacheAPI.getFromCache(event.workflowConversationIdentifier, async function (document) {
         console.log("Workflow document retrieved from cache");
         workflowDocument = document;
         var acted = false;
