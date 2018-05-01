@@ -6,7 +6,7 @@ var eventBusConsumer = require("./EventConsumer.js");
 
 var logTopic = "logTopic";
 var PORT = process.env.APP_PORT || 8115;
-var APP_VERSION = "0.26"
+var APP_VERSION = "0.27"
 var APP_NAME = "LogMonitor"
 
 console.log("Running " + APP_NAME + " version " + APP_VERSION);
@@ -54,9 +54,26 @@ app.get('/logs', function (req, res) {
 // configure Kafka interaction
 eventBusConsumer.registerEventHandler(logTopic, handleLogEvent);
 
+function IsJsonString(str) {
+  try {
+      JSON.parse(str);
+  } catch (e) {
+      return false;
+  }
+  return true;
+}
 
 function handleLogEvent(eventMessage) {
-  var logEntry = JSON.parse(JSON.parse(eventMessage.value));
+  var logEntry;
+  //note: eventMessage.value can contain a string that itself contains JSON or it can be an object
+  if (IsJsonString(eventMessage.value))
+    try {
+      logEntry = JSON.parse(eventMessage.value);
+    } catch(e) {
+      logEntry = {"logEntry":eventMessage.value}
+    } 
+  else
+    logEntry = eventMessage.value
   console.log("received logEntry", logEntry);
   logs.reverse();
   logs.push(logEntry);
