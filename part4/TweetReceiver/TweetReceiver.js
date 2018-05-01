@@ -7,7 +7,7 @@ var localLoggerAPI = require("./local-logger-api.js");
 
 
 var PORT = process.env.APP_PORT || 8095;
-var APP_VERSION = "0.1.5"
+var APP_VERSION = "0.1.6"
 var APP_NAME = "TweetReceiver"
 var workflowEventsTopic = process.env.KAFKA_TOPIC ||"workflowEvents";
 
@@ -79,6 +79,9 @@ function postNewTweet(req, res, tweet) {
     "tweet": tweet
     , "module": "soaring.clouds." + moduleName
     , "timestamp": Date.now()
+    ,"updateTimeStamp" :  new Date().getTime()
+    , "lastUpdater" : APP_NAME
+
   }, workflowEventsTopic);
   localLoggerAPI.log("Tweet was received and published to topic "+workflowEventsTopic +": "+JSON.stringify(tweet)
   , APP_NAME, "info");
