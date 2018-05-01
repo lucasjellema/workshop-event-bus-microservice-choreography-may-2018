@@ -18,7 +18,7 @@ localLoggerAPI.log = function (message, moduleName, loglevel) {
         , "timestamp": new Date().toLocaleString()
     }
     try {
-    eventBusPublisher.publishEvent("logEntry", JSON.stringify(logEntry), logTopic);
+    eventBusPublisher.publishEvent("logEntry"+logEntry.timestamp, JSON.stringify(logEntry), logTopic);
     } catch (e) {}
 }//log
 
