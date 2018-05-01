@@ -12,7 +12,7 @@ var eventBusConsumer = require("./EventConsumer.js");
 
 var workflowEventsTopic = "workflowEvents";
 var PORT = process.env.APP_PORT || 8099;
-var APP_VERSION = "0.1.8"
+var APP_VERSION = "0.1.9"
 var APP_NAME = "TweetTranslator"
 
 var TweetTranslatorActionType = "TranslateTweet";
