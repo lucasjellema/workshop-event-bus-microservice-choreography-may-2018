@@ -10,7 +10,7 @@ var eventBusConsumer = require("./EventConsumer.js");
 
 var workflowEventsTopic = "workflowEvents";
 var PORT = process.env.APP_PORT || 8091;
-var APP_VERSION = "0.8.3"
+var APP_VERSION = "0.8.4"
 var APP_NAME = "TweetValidator"
 
 console.log("Running TweetValidator version " + APP_VERSION);
