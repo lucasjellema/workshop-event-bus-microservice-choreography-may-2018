@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ksql-server
+  labels:
+    app: ksql-server
+spec:
+  nodeName: minikube
+  containers:
+  - name: ksql-server
+    # get latest version of image
+    image: confluentinc/ksql-cli:4.1.0
+    imagePullPolicy: IfNotPresent
+    command: ["/bin/bash"]
+    args: ["-c","echo Waiting for Kafka to be ready... && \
+                       cub kafka-ready -b broker.kafka:9092 1 20 && \
+                       echo Waiting a few seconds for topic creation to finish... && \
+                       sleep 2 && \
+                       /usr/bin/ksql-server-start /etc/ksql/ksql-server.properties"]
+    env:
+    - name: KSQL_CONFIG_DIR
+      value: "/etc/ksql"
+    - name: KSQL_OPTS
+      value: "-Dbootstrap.servers=broker.kafka:9092"
+    - name: KSQL_LOG4J_OPTS
+      value: "-Dlog4j.configuration=file:/etc/ksql/log4j-rolling.properties"
+    ports:
+    # containerPort is the port exposed by the container (where ksql server is listening)
+    - containerPort: 8088
