@@ -8,7 +8,7 @@ var workflowEventsTopic = "workflowEvents";
 // please create Kafka Topic before using this application in the VM running Kafka
 // kafka-topics --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic workflowEvents
 
-var APP_VERSION = "0.8.5"
+var APP_VERSION = "0.8.7"
 var APP_NAME = "WorkflowLauncher"
 
 
@@ -26,7 +26,11 @@ function handleWorkflowEvent(eventMessage) {
         console.log("A new tweet event has reached us. Time to act and publish a corresponding workflow event");
         message.payload = event.tweet;
         message.workflowConversationIdentifier = "OracleCodeTweetProcessor" + new Date().getTime();
-
+        message.creationTimeStamp = new Date().getTime();
+        message.updateTimeStamp = new Date().getTime();
+        message.lastUpdater = APP_NAME;
+    
+    
         localLoggerAPI.log("Initialized new workflow OracleCodeTweetProcessor triggered by NewTweetEvent; stored workflowevent plus routing slip in cache under key " + message.workflowConversationIdentifier + " - (workflowConversationIdentifier:"
             + message.workflowConversationIdentifier + ")"
             , APP_NAME, "info");
